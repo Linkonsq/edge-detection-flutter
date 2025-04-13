@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class CameraView extends StatefulWidget {
   final CameraDescription camera;
 
-  const CameraView({Key? key, required this.camera}) : super(key: key);
+  const CameraView({super.key, required this.camera});
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -12,11 +12,12 @@ class CameraView extends StatefulWidget {
 
 class _CameraViewState extends State<CameraView> {
   late CameraController _controller;
+  late Future<void> _initializeControllerFuture;
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _initializeControllerFuture = _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
@@ -33,10 +34,15 @@ class _CameraViewState extends State<CameraView> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_controller.value.isInitialized) {
-      return Container();
-    }
-
-    return Stack(children: [CameraPreview(_controller)]);
+    return FutureBuilder<void>(
+      future: _initializeControllerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Stack(children: [CameraPreview(_controller)]);
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
   }
 }
