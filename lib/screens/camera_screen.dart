@@ -1,5 +1,5 @@
 import 'package:camera/camera.dart';
-import 'package:edge_detection/camera/camera_view.dart';
+import 'package:edge_detection/widgets/camera_view.dart';
 import 'package:flutter/material.dart';
 
 class CameraScreen extends StatelessWidget {
