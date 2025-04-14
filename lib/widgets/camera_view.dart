@@ -26,6 +26,13 @@ class _CameraViewState extends State<CameraView> {
     _loadModel();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    _edgeDetector.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
     _controller = CameraController(
@@ -51,6 +58,8 @@ class _CameraViewState extends State<CameraView> {
 
   Future<void> _processImage(CameraImage image) async {
     final corners = await _edgeDetector.detectEdges(image);
+    debugPrint("Corners");
+    debugPrint(corners.toString());
     setState(() => _detectedCorners = corners);
   }
 
