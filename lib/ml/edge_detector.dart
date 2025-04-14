@@ -1,6 +1,6 @@
 import 'dart:typed_data';
-import 'dart:ui';
 import 'package:edge_detection/utils/image_utils.dart';
+import 'package:flutter/material.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
@@ -10,7 +10,10 @@ class EdgeDetector {
 
   Future<void> loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('edge_detector.tflite');
+      // _interpreter = await Interpreter.fromAsset('edge_detector.tflite');
+      _interpreter = await Interpreter.fromAsset(
+        'assets/models/edge_detector.tflite',
+      );
       _isLoaded = true;
     } catch (e) {
       print('Failed to load model: $e');
@@ -18,6 +21,7 @@ class EdgeDetector {
   }
 
   Future<List<Offset>> detectEdges(dynamic image) async {
+    debugPrint("Is loaded, $_isLoaded");
     if (!_isLoaded) return [];
 
     // Convert camera image to model input format
