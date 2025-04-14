@@ -10,7 +10,7 @@ class EdgeDetector {
 
   Future<void> loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('1.tflite');
+      _interpreter = await Interpreter.fromAsset('edge_detector.tflite');
       _isLoaded = true;
     } catch (e) {
       print('Failed to load model: $e');
