@@ -1,67 +1,101 @@
-import 'dart:typed_data';
 import 'package:edge_detection/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
 
 class EdgeDetector {
-  late Interpreter _interpreter;
+  Interpreter? _interpreter;
   bool _isLoaded = false;
+  static const int INPUT_SIZE = 256;
 
   Future<void> loadModel() async {
     try {
-      // _interpreter = await Interpreter.fromAsset('edge_detector.tflite');
+      // Load model
       _interpreter = await Interpreter.fromAsset(
         'assets/models/edge_detector.tflite',
       );
+
+      // Set input and output shapes
+      _interpreter!.allocateTensors();
+
       _isLoaded = true;
+      debugPrint('Model loaded successfully');
     } catch (e) {
-      print('Failed to load model: $e');
+      debugPrint('Failed to load model: $e');
+      rethrow;
     }
   }
 
-  Future<List<Offset>> detectEdges(dynamic image) async {
-    debugPrint("Is loaded, $_isLoaded");
-    if (!_isLoaded) return [];
-
-    // Convert camera image to model input format
-    final input = await _preprocessImage(image);
-
-    // Run inference
-    final output = List.filled(4 * 2, 0.0).reshape([4, 2]);
-    _interpreter.run(input, output);
-
-    // Convert output to screen coordinates
-    return _convertToScreenCoordinates(output, image.width, image.height);
-  }
-
-  Future<Uint8List> _preprocessImage(dynamic image) async {
-    // Convert to grayscale and resize to model input size
-    img.Image convertedImage = convertCameraImage(image);
-    img.Image resized = img.copyResize(convertedImage, width: 256, height: 256);
-    img.Image gray = img.grayscale(resized);
-
-    // Normalize pixel values
-    final input = Float32List(256 * 256);
-    for (int i = 0; i < 256 * 256; i++) {
-      input[i] = gray.getPixel(i % 256, i ~/ 256).luminance / 255.0;
+  Future<List<Offset>> detectEdges(CameraImage cameraImage) async {
+    if (_interpreter == null || !_isLoaded) {
+      return [];
     }
 
-    return input.buffer.asUint8List();
+    try {
+      // Convert CameraImage to img.Image
+      final img.Image? image = convertCameraImage(cameraImage);
+      if (image == null) {
+        return [];
+      }
+
+      // Preprocess image for model input
+      final processedInput = _preprocessImage(image);
+
+      // Prepare input and output tensors
+      final inputTensor = [processedInput];
+      final outputShape = [1, 4, 2]; // Batch, 4 corners, x/y coordinates
+      final outputTensor = List<double>.filled(
+        outputShape[0] * outputShape[1] * outputShape[2],
+        0.0,
+      );
+
+      // Run inference
+      _interpreter!.run(inputTensor, outputTensor);
+
+      // Process outputs
+      final List<Offset> corners = [];
+      for (int i = 0; i < 4; i++) {
+        final x = outputTensor[i * 2] * cameraImage.width;
+        final y = outputTensor[i * 2 + 1] * cameraImage.height;
+        corners.add(Offset(x, y));
+      }
+
+      return corners;
+    } catch (e) {
+      debugPrint('Error during edge detection: $e');
+      return [];
+    }
   }
 
-  List<Offset> _convertToScreenCoordinates(
-    List<dynamic> points,
-    int width,
-    int height,
-  ) {
-    // Convert normalized coordinates (0-1) to screen coordinates
-    return points.map((point) {
-      return Offset(point[0] * width, point[1] * height);
-    }).toList();
+  List<double> _preprocessImage(img.Image image) {
+    // Resize to model input size
+    final resized = img.copyResize(
+      image,
+      width: INPUT_SIZE,
+      height: INPUT_SIZE,
+    );
+
+    // Convert to grayscale if needed
+    final grayscale = img.grayscale(resized);
+
+    // Normalize pixel values to 0-1
+    final inputBuffer = List<double>.filled(INPUT_SIZE * INPUT_SIZE, 0);
+
+    for (int y = 0; y < INPUT_SIZE; y++) {
+      for (int x = 0; x < INPUT_SIZE; x++) {
+        final pixel = grayscale.getPixel(x, y);
+        final normalizedValue = pixel.r / 255.0;
+        inputBuffer[y * INPUT_SIZE + x] = normalizedValue;
+      }
+    }
+
+    return inputBuffer;
   }
 
   void dispose() {
-    _interpreter.close();
+    if (_interpreter != null) {
+      _interpreter!.close();
+    }
   }
 }
