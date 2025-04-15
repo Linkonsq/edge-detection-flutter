@@ -22,7 +22,7 @@ This Flutter project implements two approaches for document edge detection:
 - ✅ Native-performance document scanning
 - ✅ Automatic edge detection and crop functionality
 - ✅ Automatic and manual image capture
-- ✅ Save scanned images
+- ✅ Save/Delete scanned images
 
 ## 🚀 Setup Instructions
 
