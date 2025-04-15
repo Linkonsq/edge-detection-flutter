@@ -22,6 +22,7 @@ This Flutter project implements two approaches for document edge detection:
 - ✅ Native-performance document scanning
 - ✅ Automatic edge detection and crop functionality
 - ✅ Automatic and manual image capture
+- ✅ Save scanned images
 
 ## 🚀 Setup Instructions
 
@@ -33,7 +34,7 @@ flutter pub get
 flutter run
 ```
 
-### For ML Kit
+### For Google ML Kit
 ```bash
 git clone https://github.com/Linkonsq/edge-detection-flutter.git
 cd edge-detection-flutter
