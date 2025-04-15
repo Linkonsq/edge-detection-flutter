@@ -4,8 +4,8 @@
 
 ## 📌 Project Overview
 This Flutter project implements two approaches for document edge detection:
-1. **Custom TFLite Model** (main branch - Experimental)
-2. **Google ML Kit** (google_mlkit_document_scanner branch - Production-ready)
+1. **Custom TFLite Model** (Main branch - Experimental)
+2. **Google ML Kit** ([`google_mlkit_document_scanner` branch](https://github.com/Linkonsq/edge-detection-flutter/tree/google_mlkit_document_scanner) - Production-ready)
 
 ## 🛠️ Implementation Status
 
@@ -32,7 +32,7 @@ cd edge-detection-flutter
 flutter pub get
 flutter run
 
-### For ML Kit
+## For ML Kit
 ```bash
 git clone https://github.com/Linkonsq/edge-detection-flutter.git
 cd edge-detection-flutter
