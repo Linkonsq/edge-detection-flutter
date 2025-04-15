@@ -7,7 +7,7 @@
 - ✅ Native-performance document scanning
 - ✅ Automatic edge detection and crop functionality
 - ✅ Automatic and manual image capture
-- ✅ Save scanned images
+- ✅ Save/Delete scanned images
 
 ## 🚀 Setup Instructions
 
