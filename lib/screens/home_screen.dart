@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
-import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/scanned_image_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,36 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<String> scannedImages = [];
+  late SharedPreferences prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    _loadSavedImages();
+  }
+
+  void _loadSavedImages() {
+    final savedImages = prefs.getStringList('saved_images') ?? [];
+    setState(() {
+      scannedImages = savedImages;
+    });
+  }
+
+  Future<void> _saveImages() async {
+    await prefs.setStringList('saved_images', scannedImages);
+  }
+
+  void _handleDelete(int index) {
+    setState(() {
+      scannedImages.removeAt(index);
+    });
+    _saveImages();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             Container(
-              margin: const EdgeInsets.fromLTRB(16.0, 24, 16, 0),
-              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.fromLTRB(16.0, 16, 16, 0),
+              padding: const EdgeInsets.all(16),
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -62,13 +93,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text(
                     'Scan Receipt or Documents',
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: Colors.black87,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
                       DocumentScannerOptions documentOptions =
@@ -87,16 +118,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (result.images.isNotEmpty) {
                         setState(() {
-                          scannedImages = List.from(result.images);
+                          scannedImages.addAll(result.images);
                         });
+                        _saveImages();
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+                        horizontal: 24,
+                        vertical: 12,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -106,12 +138,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
-                        Icon(Icons.document_scanner, size: 24),
+                        Icon(Icons.document_scanner, size: 20),
                         SizedBox(width: 8),
                         Text(
                           'Scan Document',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
                           ),
@@ -124,62 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             Expanded(
-              child:
-                  scannedImages.isEmpty
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.image_search,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No scanned images yet',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                        itemCount: scannedImages.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                File(scannedImages[index]),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+              child: ScannedImageList(
+                images: scannedImages,
+                onDelete: _handleDelete,
+              ),
             ),
           ],
         ),
