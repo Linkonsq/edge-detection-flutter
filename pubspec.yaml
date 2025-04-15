@@ -30,11 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.11.1
-  image: ^4.5.4
-  tflite_flutter: ^0.11.0
-  path_provider: ^2.1.5
-  path: ^1.9.1
+  google_mlkit_document_scanner: ^0.4.0
+  image_picker: ^1.1.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -63,8 +60,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-    - assets/models/
+#  assets:
+#    - assets/models/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
