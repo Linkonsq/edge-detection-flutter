@@ -12,55 +12,106 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => _CameraViewState();
 }
 
-class _CameraViewState extends State<CameraView> {
+class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
   final EdgeDetector _edgeDetector = EdgeDetector();
   List<Offset> _detectedCorners = [];
   bool _isModelLoaded = false;
+  bool _isProcessingImage = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeControllerFuture = _initializeCamera();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
     _loadModel();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopImageStream();
     _controller.dispose();
     _edgeDetector.dispose();
     super.dispose();
   }
 
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    _controller = CameraController(
-      cameras[0],
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
-    await _controller.initialize();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App state changed before we got the chance to initialize the camera
+    if (!_controller.value.isInitialized) {
+      return;
+    }
 
+    if (state == AppLifecycleState.inactive) {
+      _stopImageStream();
+      _controller.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      _controller = CameraController(
+        widget.camera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+      );
+
+      _initializeControllerFuture = _controller.initialize();
+      await _initializeControllerFuture;
+
+      if (mounted) {
+        setState(() {});
+        _startImageStream();
+      }
+    } catch (e) {
+      debugPrint('Error initializing camera: $e');
+    }
+  }
+
+  void _startImageStream() {
     _controller.startImageStream((CameraImage image) {
-      if (_isModelLoaded) {
+      if (_isModelLoaded && !_isProcessingImage) {
         _processImage(image);
       }
     });
+  }
 
-    if (mounted) setState(() {});
+  void _stopImageStream() {
+    if (_controller.value.isStreamingImages) {
+      _controller.stopImageStream();
+    }
   }
 
   Future<void> _loadModel() async {
-    await _edgeDetector.loadModel();
-    setState(() => _isModelLoaded = true);
+    try {
+      await _edgeDetector.loadModel();
+      if (mounted) {
+        setState(() => _isModelLoaded = true);
+      }
+    } catch (e) {
+      debugPrint('Error loading model: $e');
+    }
   }
 
   Future<void> _processImage(CameraImage image) async {
-    final corners = await _edgeDetector.detectEdges(image);
-    debugPrint("Corners");
-    debugPrint(corners.toString());
-    setState(() => _detectedCorners = corners);
+    if (_isProcessingImage) return;
+
+    _isProcessingImage = true;
+    try {
+      final corners = await _edgeDetector.detectEdges(image);
+      if (mounted) {
+        setState(() => _detectedCorners = corners);
+      }
+    } catch (e) {
+      debugPrint('Error processing image: $e');
+    } finally {
+      _isProcessingImage = false;
+    }
   }
 
   @override
@@ -70,16 +121,18 @@ class _CameraViewState extends State<CameraView> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           return Stack(
+            fit: StackFit.expand,
             children: [
               CameraPreview(_controller),
-              CustomPaint(
-                painter: PolygonPainter(_detectedCorners),
-                child: Container(),
-              ),
+              if (_detectedCorners.isNotEmpty)
+                CustomPaint(
+                  painter: PolygonPainter(_detectedCorners),
+                  size: Size.infinite,
+                ),
             ],
           );
         } else {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );
