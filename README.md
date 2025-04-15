@@ -1,16 +1,41 @@
-# edge_detection
+# Document Edge Detection Flutter App
 
-A new Flutter project.
+⚠️ **Important Note**: This project is currently in an experimental state. While the app framework is fully implemented, I was unable to find a suitable pre-trained edge detection tflite model for Flutter. However, I've made significant progress in converting the HED (Holistically-Nested Edge Detection) model to TensorFlow Lite format. But I think some issues contains in the converted model.
 
-## Getting Started
+## 📌 Project Overview
+This Flutter project implements two approaches for document edge detection:
+1. **Custom TFLite Model** (main branch - Experimental)
+2. **Google ML Kit** (google_mlkit_document_scanner branch - Production-ready)
 
-This project is a starting point for a Flutter application.
+## 🛠️ Implementation Status
 
-A few resources to get you started if this is your first Flutter project:
+### Approach 1: Custom TFLite Model
+- ✅ Complete Flutter app architecture
+- ✅ Camera view integration
+- ✅ Real-time processing pipeline
+- ⚠️ Edge detection model: *Partially implemented*
+  - Conversion attempted from HED Caffe to TFLite
+  - See conversion process at: [hed-to-tflite repository](https://github.com/Linkonsq/hed-to-tflite)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Approach 2: Google ML Kit
+- ✅ Fully working implementation
+- ✅ Native-performance document scanning
+- ✅ Automatic edge detection and crop functionality
+- ✅ Automatic and manual image capture
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🚀 Setup Instructions
+
+### For Custom TFLITE Model
+```bash
+git clone https://github.com/Linkonsq/edge-detection-flutter
+cd edge-detection-flutter
+flutter pub get
+flutter run
+
+### For ML Kit
+```bash
+git clone https://github.com/Linkonsq/edge-detection-flutter.git
+cd edge-detection-flutter
+git checkout google_mlkit_document_scanner
+flutter pub get
+flutter run
