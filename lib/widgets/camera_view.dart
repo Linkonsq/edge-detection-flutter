@@ -1,6 +1,4 @@
 import 'package:camera/camera.dart';
-import 'package:edge_detection/ml/edge_detector.dart';
-import 'package:edge_detection/widgets/polygon_painter.dart';
 import 'package:flutter/material.dart';
 
 class CameraView extends StatefulWidget {
@@ -15,21 +13,16 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-  final EdgeDetector _edgeDetector = EdgeDetector();
-  List<Offset> _detectedCorners = [];
-  bool _isModelLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _initializeControllerFuture = _initializeCamera();
-    _loadModel();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _edgeDetector.dispose();
     super.dispose();
   }
 
@@ -42,25 +35,7 @@ class _CameraViewState extends State<CameraView> {
     );
     await _controller.initialize();
 
-    _controller.startImageStream((CameraImage image) {
-      if (_isModelLoaded) {
-        _processImage(image);
-      }
-    });
-
     if (mounted) setState(() {});
-  }
-
-  Future<void> _loadModel() async {
-    await _edgeDetector.loadModel();
-    setState(() => _isModelLoaded = true);
-  }
-
-  Future<void> _processImage(CameraImage image) async {
-    final corners = await _edgeDetector.detectEdges(image);
-    debugPrint("Corners");
-    debugPrint(corners.toString());
-    setState(() => _detectedCorners = corners);
   }
 
   @override
@@ -69,15 +44,7 @@ class _CameraViewState extends State<CameraView> {
       future: _initializeControllerFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          return Stack(
-            children: [
-              CameraPreview(_controller),
-              CustomPaint(
-                painter: PolygonPainter(_detectedCorners),
-                child: Container(),
-              ),
-            ],
-          );
+          return Stack(children: [CameraPreview(_controller)]);
         } else {
           return Center(child: CircularProgressIndicator());
         }
