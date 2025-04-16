@@ -20,8 +20,21 @@ class CameraScreen extends StatelessWidget {
           ),
         ),
         backgroundColor: Colors.blueAccent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Pop and refresh home screen
+            Navigator.pop(context, true);
+          },
+        ),
       ),
-      body: CameraView(camera: camera),
+      body: CameraView(
+        camera: camera,
+        onImageCaptured: () {
+          // Return to home screen with refresh flag
+          Navigator.pop(context, true);
+        },
+      ),
     );
   }
 }

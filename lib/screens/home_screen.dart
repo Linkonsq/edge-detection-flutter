@@ -49,12 +49,17 @@ class _HomeScreenState extends State<HomeScreen> {
       final cameras = await availableCameras();
       final firstCamera = cameras.first;
 
-      Navigator.push(
+      final shouldRefresh = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => CameraScreen(camera: firstCamera),
         ),
       );
+
+      // Refresh the image list if the camera screen captured an image
+      if (shouldRefresh == true) {
+        _loadSavedImages();
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
