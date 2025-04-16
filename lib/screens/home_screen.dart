@@ -1,7 +1,7 @@
+import 'package:edge_detection/widgets/scanned_image_list.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/scanned_image_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
